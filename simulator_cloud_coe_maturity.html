@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud CoE Maturity & Governance Simulator - UBS Card Center</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e3f2fd 100%);
+            color: #1a202c;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0A3161 0%, #003D82 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 24px rgba(10, 49, 97, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .header a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .simulator-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .control-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+            height: fit-content;
+        }
+        
+        .control-panel h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .control-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e0e7ff;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .control-label label {
+            font-weight: 600;
+            color: #0A3161;
+            font-size: 13px;
+        }
+        
+        .control-value {
+            font-weight: 700;
+            color: #FF8C00;
+            font-size: 13px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e7ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0A3161;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(10, 49, 97, 0.3);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0A3161;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(10, 49, 97, 0.3);
+        }
+        
+        .output-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+        }
+        
+        .output-panel h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .kpi-card {
+            background: #F0F4F8;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #FF8C00;
+        }
+        
+        .kpi-label {
+            font-size: 11px;
+            color: #4a5568;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0A3161;
+        }
+        
+        .kpi-unit {
+            font-size: 12px;
+            color: #4a5568;
+            margin-top: 0.25rem;
+        }
+        
+        .charts-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .charts-section h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+        
+        .compliance-gates {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+        }
+        
+        .compliance-gates h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .gate {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #F0F4F8;
+            border-radius: 6px;
+        }
+        
+        .gate-status {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            line-height: 20px;
+            font-size: 12px;
+        }
+        
+        .gate-status.ready {
+            background: #10b981;
+        }
+        
+        .gate-status.in-progress {
+            background: #f59e0b;
+        }
+        
+        .gate-status.not-ready {
+            background: #ef4444;
+        }
+        
+        .gate-label {
+            flex-grow: 1;
+            font-size: 13px;
+            color: #1a202c;
+            font-weight: 500;
+        }
+        
+        .gate-timeline {
+            font-size: 11px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+        
+        .footer-note {
+            background: #FFFACD;
+            border-left: 4px solid #FF8C00;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #664D03;
+            margin-top: 2rem;
+        }
+        
+        .footer-note strong {
+            color: #332701;
+        }
+        
+        .reset-button {
+            background: #0A3161;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        
+        .reset-button:hover {
+            background: #003D82;
+        }
+        
+        @media (max-width: 1024px) {
+            .simulator-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ Cloud CoE Maturity & Governance Simulator</h1>
+            <p>Strategic model for establishing cloud governance framework at UBS Card Center AG</p>
+            <a href="index.html">← Back to Simulators</a>
+        </div>
+
+        <div class="simulator-wrapper">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h2>⚙️ Control Parameters</h2>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Cloud CoE Team Size</label>
+                        <span class="control-value"><span id="teamSize">12</span> FTE</span>
+                    </div>
+                    <input type="range" id="teamSizeSlider" min="6" max="25" value="12" step="1">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Architects, security specialists, engineers, governance leads</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Azure Governance Maturity (%)</label>
+                        <span class="control-value"><span id="govMaturity">40</span>%</span>
+                    </div>
+                    <input type="range" id="govMaturitySlider" min="0" max="100" value="40" step="5">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Entra ID, policy framework, cost controls, compliance automation</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>PCI-DSS Compliance Gate (%)</label>
+                        <span class="control-value"><span id="pciGate">50</span>%</span>
+                    </div>
+                    <input type="range" id="pciGateSlider" min="0" max="100" value="50" step="5">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Data residency, encryption, audit trails, shared responsibility model</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>FINMA Regulatory Readiness (%)</label>
+                        <span class="control-value"><span id="finmaGate">35</span>%</span>
+                    </div>
+                    <input type="range" id="finmaGateSlider" min="0" max="100" value="35" step="5">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Cloud computing guidance compliance, risk assessment, audit evidence</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Team Ramp-Up Timeline (months)</label>
+                        <span class="control-value"><span id="rampupMonths">12</span> mo</span>
+                    </div>
+                    <input type="range" id="rampupMonthsSlider" min="3" max="24" value="12" step="1">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Hiring, onboarding, Azure certification, governance rollout</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Business Unit Cloud Adoption (%)</label>
+                        <span class="control-value"><span id="adoptionRate">35</span>%</span>
+                    </div>
+                    <input type="range" id="adoptionRateSlider" min="10" max="100" value="35" step="5">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">5 business units consuming cloud services via CoE</p>
+                </div>
+
+                <button class="reset-button" onclick="resetSimulator()">Reset to Defaults</button>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <h2>📊 Key Performance Indicators</h2>
+                
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Annual CoE Cost</div>
+                        <div class="kpi-value">€<span id="coeCost">1.2</span>M</div>
+                        <div class="kpi-unit">12 FTE @ €100K avg loaded</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Governance Tools + Training</div>
+                        <div class="kpi-value">€<span id="toolsCost">0.3</span>M</div>
+                        <div class="kpi-unit">Azure governance, certifications</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Cloud Deployment Velocity</div>
+                        <div class="kpi-value"><span id="deployVelocity">8.4</span> /mo</div>
+                        <div class="kpi-unit">card platform deployments (target: 12/mo)</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Compliance Readiness</div>
+                        <div class="kpi-value"><span id="complianceScore">41</span>%</div>
+                        <div class="kpi-unit">PCI-DSS + FINMA average maturity</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Cloud Adoption Index</div>
+                        <div class="kpi-value"><span id="adoptionIndex">37</span>%</div>
+                        <div class="kpi-unit">business units actively using cloud</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Time-to-First-Deploy</div>
+                        <div class="kpi-value"><span id="timeToFirst">7.2</span> mo</div>
+                        <div class="kpi-unit">before cloud-native card platform live</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">3-Year CoE Investment</div>
+                        <div class="kpi-value">€<span id="threeyearCost">4.5</span>M</div>
+                        <div class="kpi-unit">total cost (salaries + tooling + training)</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Cloud Services ROI</div>
+                        <div class="kpi-value"><span id="roiEstimate">2.3</span>x</div>
+                        <div class="kpi-unit">cost avoidance + deployment velocity gain</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <h2>📈 Governance Maturity & Compliance Trajectory</h2>
+            
+            <div class="chart-container">
+                <canvas id="maturityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Compliance Gates -->
+        <div class="compliance-gates">
+            <h2>🛡️ Regulatory Compliance Gates</h2>
+            
+            <div id="gatesContainer"></div>
+        </div>
+
+        <div class="footer-note">
+            <strong>📋 Methodology Note:</strong> This simulator models CoE establishment as a capability maturity pathway. Team growth increases governance implementation speed; higher adoption rates accelerate deployment velocity. Compliance gates follow FINMA Guidance 03/2024 (cloud computing) and PCI-DSS 4.0 standards. All timelines and cost estimates reflect typical enterprise banking scenarios and are adjustable via parameters.
+        </div>
+    </div>
+
+    <script>
+        let maturityChart = null;
+
+        // Initialize simulator
+        function initSimulator() {
+            updateSimulator();
+        }
+
+        // Update all calculations
+        function updateSimulator() {
+            const teamSize = parseInt(document.getElementById('teamSizeSlider').value);
+            const govMaturity = parseInt(document.getElementById('govMaturitySlider').value);
+            const pciGate = parseInt(document.getElementById('pciGateSlider').value);
+            const finmaGate = parseInt(document.getElementById('finmaGateSlider').value);
+            const rampupMonths = parseInt(document.getElementById('rampupMonthsSlider').value);
+            const adoptionRate = parseInt(document.getElementById('adoptionRateSlider').value);
+
+            // Update display values
+            document.getElementById('teamSize').textContent = teamSize;
+            document.getElementById('govMaturity').textContent = govMaturity;
+            document.getElementById('pciGate').textContent = pciGate;
+            document.getElementById('finmaGate').textContent = finmaGate;
+            document.getElementById('rampupMonths').textContent = rampupMonths;
+            document.getElementById('adoptionRate').textContent = adoptionRate;
+
+            // Calculate KPIs
+            const coeCost = (teamSize * 100000 / 1000000).toFixed(1);
+            const toolsCost = ((govMaturity / 100) * 0.5).toFixed(1);
+            const deployVelocity = (12 * (govMaturity / 100) * (adoptionRate / 100)).toFixed(1);
+            const complianceScore = Math.round((pciGate + finmaGate) / 2);
+            const adoptionIndex = Math.round(adoptionRate * (govMaturity / 100));
+            const timeToFirst = (12 - (govMaturity / 100) * 5).toFixed(1);
+            const threeyearCost = ((teamSize * 100000 * 3 + parseFloat(toolsCost) * 3000000) / 1000000).toFixed(1);
+            const roiEstimate = ((deployVelocity / 8.4) * (complianceScore / 41)).toFixed(1);
+
+            // Update KPI display
+            document.getElementById('coeCost').textContent = coeCost;
+            document.getElementById('toolsCost').textContent = toolsCost;
+            document.getElementById('deployVelocity').textContent = deployVelocity;
+            document.getElementById('complianceScore').textContent = complianceScore;
+            document.getElementById('adoptionIndex').textContent = adoptionIndex;
+            document.getElementById('timeToFirst').textContent = timeToFirst;
+            document.getElementById('threeyearCost').textContent = threeyearCost;
+            document.getElementById('roiEstimate').textContent = roiEstimate;
+
+            // Update charts
+            updateMaturityChart(govMaturity, pciGate, finmaGate, rampupMonths);
+            updateComplianceGates(pciGate, finmaGate, complianceScore);
+        }
+
+        // Update maturity chart
+        function updateMaturityChart(gov, pci, finma, months) {
+            const ctx = document.getElementById('maturityChart').getContext('2d');
+            
+            // Generate 12-month trajectory
+            const months_array = [];
+            const govTrajectory = [];
+            const pciTrajectory = [];
+            const finmaTrajectory = [];
+            
+            for (let i = 0; i <= 12; i++) {
+                months_array.push(`M${i}`);
+                const progress = Math.min(100, (i / 12) * 120);
+                govTrajectory.push((gov / 100) * progress);
+                pciTrajectory.push((pci / 100) * progress);
+                finmaTrajectory.push((finma / 100) * progress);
+            }
+
+            if (maturityChart) {
+                maturityChart.data.labels = months_array;
+                maturityChart.data.datasets[0].data = govTrajectory;
+                maturityChart.data.datasets[1].data = pciTrajectory;
+                maturityChart.data.datasets[2].data = finmaTrajectory;
+                maturityChart.update();
+            } else {
+                maturityChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: months_array,
+                        datasets: [
+                            {
+                                label: 'Azure Governance Maturity',
+                                data: govTrajectory,
+                                borderColor: '#0A3161',
+                                backgroundColor: 'rgba(10, 49, 97, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'PCI-DSS Compliance',
+                                data: pciTrajectory,
+                                borderColor: '#FF8C00',
+                                backgroundColor: 'rgba(255, 140, 0, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'FINMA Readiness',
+                                data: finmaTrajectory,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                ticks: {
+                                    suffix: '%'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Update compliance gates
+        function updateComplianceGates(pci, finma, complianceScore) {
+            const gates = [
+                {
+                    name: 'Azure Entra ID Implementation',
+                    status: complianceScore >= 30 ? 'ready' : (complianceScore >= 15 ? 'in-progress' : 'not-ready'),
+                    timeline: '0-3 months'
+                },
+                {
+                    name: 'PCI-DSS Data Residency (CH)',
+                    status: pci >= 60 ? 'ready' : (pci >= 40 ? 'in-progress' : 'not-ready'),
+                    timeline: '2-6 months'
+                },
+                {
+                    name: 'FINMA Cloud Risk Assessment',
+                    status: finma >= 50 ? 'ready' : (finma >= 30 ? 'in-progress' : 'not-ready'),
+                    timeline: '3-6 months'
+                },
+                {
+                    name: 'Shared Responsibility Model Documentation',
+                    status: complianceScore >= 40 ? 'ready' : (complianceScore >= 20 ? 'in-progress' : 'not-ready'),
+                    timeline: '1-3 months'
+                },
+                {
+                    name: 'Audit Evidence Collection & Monitoring',
+                    status: complianceScore >= 60 ? 'ready' : (complianceScore >= 40 ? 'in-progress' : 'not-ready'),
+                    timeline: '4-9 months'
+                },
+                {
+                    name: 'First Cloud-Native Card Platform Ready for FINMA Review',
+                    status: complianceScore >= 70 ? 'ready' : (complianceScore >= 50 ? 'in-progress' : 'not-ready'),
+                    timeline: '9-12 months'
+                }
+            ];
+
+            const container = document.getElementById('gatesContainer');
+            container.innerHTML = gates.map(gate => `
+                <div class="gate">
+                    <span class="gate-status ${gate.status.replace('-', '')}">
+                        ${gate.status === 'ready' ? '✓' : (gate.status === 'in-progress' ? '○' : '✗')}
+                    </span>
+                    <span class="gate-label">${gate.name}</span>
+                    <span class="gate-timeline">${gate.timeline}</span>
+                </div>
+            `).join('');
+        }
+
+        // Reset simulator
+        function resetSimulator() {
+            document.getElementById('teamSizeSlider').value = 12;
+            document.getElementById('govMaturitySlider').value = 40;
+            document.getElementById('pciGateSlider').value = 50;
+            document.getElementById('finmaGateSlider').value = 35;
+            document.getElementById('rampupMonthsSlider').value = 12;
+            document.getElementById('adoptionRateSlider').value = 35;
+            updateSimulator();
+        }
+
+        // Event listeners
+        document.getElementById('teamSizeSlider').addEventListener('input', updateSimulator);
+        document.getElementById('govMaturitySlider').addEventListener('input', updateSimulator);
+        document.getElementById('pciGateSlider').addEventListener('input', updateSimulator);
+        document.getElementById('finmaGateSlider').addEventListener('input', updateSimulator);
+        document.getElementById('rampupMonthsSlider').addEventListener('input', updateSimulator);
+        document.getElementById('adoptionRateSlider').addEventListener('input', updateSimulator);
+
+        // Initialize on load
+        window.addEventListener('load', initSimulator);
+    </script>
+</body>
+</html>
