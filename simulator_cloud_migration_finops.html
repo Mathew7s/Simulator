@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Migration & FinOps Simulator - UBS Card Center</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e3f2fd 100%);
+            color: #1a202c;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0A3161 0%, #003D82 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 24px rgba(10, 49, 97, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .header a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .simulator-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .control-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+            height: fit-content;
+        }
+        
+        .control-panel h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .control-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e0e7ff;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .control-label label {
+            font-weight: 600;
+            color: #0A3161;
+            font-size: 13px;
+        }
+        
+        .control-value {
+            font-weight: 700;
+            color: #FF8C00;
+            font-size: 13px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e7ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0A3161;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(10, 49, 97, 0.3);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0A3161;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(10, 49, 97, 0.3);
+        }
+        
+        .output-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+        }
+        
+        .output-panel h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .kpi-card {
+            background: #F0F4F8;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #FF8C00;
+        }
+        
+        .kpi-label {
+            font-size: 11px;
+            color: #4a5568;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0A3161;
+        }
+        
+        .kpi-unit {
+            font-size: 12px;
+            color: #4a5568;
+            margin-top: 0.25rem;
+        }
+        
+        .charts-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .charts-section h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 2rem;
+        }
+        
+        .cost-breakdown {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+        }
+        
+        .cost-breakdown h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .cost-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e0e7ff;
+            font-size: 13px;
+        }
+        
+        .cost-line:last-child {
+            border-bottom: none;
+        }
+        
+        .cost-label {
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .cost-value {
+            font-weight: 700;
+            color: #0A3161;
+        }
+        
+        .cost-total {
+            background: #E0EEFF;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .cost-total .label {
+            font-weight: 700;
+            color: #0A3161;
+        }
+        
+        .cost-total .value {
+            font-weight: 700;
+            color: #FF8C00;
+            font-size: 18px;
+        }
+        
+        .footer-note {
+            background: #FFFACD;
+            border-left: 4px solid #FF8C00;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #664D03;
+            margin-top: 2rem;
+        }
+        
+        .footer-note strong {
+            color: #332701;
+        }
+        
+        .reset-button {
+            background: #0A3161;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        
+        .reset-button:hover {
+            background: #003D82;
+        }
+        
+        @media (max-width: 1024px) {
+            .simulator-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Cloud Migration & FinOps Transformation Simulator</h1>
+            <p>Financial model for migration from on-premise to Azure cloud with cost optimization</p>
+            <a href="index.html">← Back to Simulators</a>
+        </div>
+
+        <div class="simulator-wrapper">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h2>⚙️ FinOps Parameters</h2>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Current On-Prem Annual Cost (€)</label>
+                        <span class="control-value">€<span id="onpremCost">2.8</span>M</span>
+                    </div>
+                    <input type="range" id="onpremCostSlider" min="1.5" max="5" value="2.8" step="0.1">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Data warehouse, card processing, networking, staff</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Cloud Adoption Rate (Year 1, %)</label>
+                        <span class="control-value"><span id="adoptionRate">40</span>%</span>
+                    </div>
+                    <input type="range" id="adoptionRateSlider" min="20" max="80" value="40" step="5">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">workload migration to Azure</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Reserved Capacity Commitment (%)</label>
+                        <span class="control-value"><span id="reservedRate">50</span>%</span>
+                    </div>
+                    <input type="range" id="reservedRateSlider" min="0" max="100" value="50" step="10">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">1-year or 3-year Azure reserved instances discount</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Cloud Cost Optimization Savings (%)</label>
+                        <span class="control-value"><span id="optimizationRate">20</span>%</span>
+                    </div>
+                    <input type="range" id="optimizationRateSlider" min="0" max="40" value="20" step="2">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">right-sizing, auto-scaling, cost controls</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>On-Prem Decommission Timeline (months)</label>
+                        <span class="control-value"><span id="decommMonths">18</span> mo</span>
+                    </div>
+                    <input type="range" id="decommMonthsSlider" min="6" max="36" value="18" step="1">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">when to shut down legacy systems</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Migration Efficiency Factor</label>
+                        <span class="control-value"><span id="efficiencyFactor">1.1</span>x</span>
+                    </div>
+                    <input type="range" id="efficiencyFactorSlider" min="0.8" max="1.5" value="1.1" step="0.1">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">team productivity, replatforming benefits</p>
+                </div>
+
+                <button class="reset-button" onclick="resetSimulator()">Reset to Defaults</button>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <h2>📊 Financial KPIs</h2>
+                
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Year 1 Cloud Cost</div>
+                        <div class="kpi-value">€<span id="year1CloudCost">1.5</span>M</div>
+                        <div class="kpi-unit">adoption + new cloud services</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Year 1 Hybrid Total</div>
+                        <div class="kpi-value">€<span id="year1Total">3.8</span>M</div>
+                        <div class="kpi-unit">on-prem + cloud costs combined</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">3-Year Total Cost of Ownership</div>
+                        <div class="kpi-value">€<span id="threeyearTco">9.2</span>M</div>
+                        <div class="kpi-unit">cumulative (on-prem + cloud + migration)</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">3-Year Cost Avoidance</div>
+                        <div class="kpi-value">€<span id="costAvoidance">2.1</span>M</div>
+                        <div class="kpi-unit">vs. continuing on-prem trajectory</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Break-Even Timeline</div>
+                        <div class="kpi-value"><span id="breakeven">2.3</span> yr</div>
+                        <div class="kpi-unit">cloud savings exceed migration costs</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Annual Cloud OpEx (Year 3)</div>
+                        <div class="kpi-value">€<span id="year3CloudCost">2.2</span>M</div>
+                        <div class="kpi-unit">steady-state cloud run rate</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Migration Program Cost</div>
+                        <div class="kpi-value">€<span id="migrationCost">0.8</span>M</div>
+                        <div class="kpi-unit">one-time replatforming + training</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">3-Year ROI</div>
+                        <div class="kpi-value"><span id="roi">2.6</span>x</div>
+                        <div class="kpi-unit">cost avoidance + efficiency gains</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <h2>📈 3-Year Cost Trajectory: On-Prem vs. Cloud vs. Hybrid</h2>
+            
+            <div class="chart-container">
+                <canvas id="costChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Cost Breakdown -->
+        <div class="cost-breakdown">
+            <h2>💳 Year 1 Cost Breakdown</h2>
+            
+            <div class="cost-line">
+                <span class="cost-label">On-Prem Continued (60% workloads)</span>
+                <span class="cost-value">€<span id="breakdown_onprem">1.68</span>M</span>
+            </div>
+            
+            <div class="cost-line">
+                <span class="cost-label">Azure Cloud Services (40% workloads)</span>
+                <span class="cost-value">€<span id="breakdown_cloud">0.96</span>M</span>
+            </div>
+            
+            <div class="cost-line">
+                <span class="cost-label">Reserved Instance Discount</span>
+                <span class="cost-value">-€<span id="breakdown_reserved">0.24</span>M</span>
+            </div>
+            
+            <div class="cost-line">
+                <span class="cost-label">Optimization Savings</span>
+                <span class="cost-value">-€<span id="breakdown_optimization">0.19</span>M</span>
+            </div>
+            
+            <div class="cost-line">
+                <span class="cost-label">Migration Amortization (12-month)</span>
+                <span class="cost-value">€<span id="breakdown_migration">0.17</span>M</span>
+            </div>
+            
+            <div class="cost-total">
+                <span class="label">Year 1 Total Cost:</span>
+                <span class="value">€<span id="breakdown_total">3.38</span>M</span>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <strong>📋 Methodology Note:</strong> This simulator models a hybrid cloud transition with year-by-year cost optimization. Year 1 includes 40% migration, reserved capacity commitment, and cloud-native optimization savings. By Year 3, on-prem decommissioning is complete. Cost avoidance is calculated as the difference between baseline on-prem trajectory (2% annual growth) vs. optimized cloud path. All calculations use Azure public pricing; actual costs depend on volume discounts and migration complexity.
+        </div>
+    </div>
+
+    <script>
+        let costChart = null;
+
+        function initSimulator() {
+            updateSimulator();
+        }
+
+        function updateSimulator() {
+            const onpremCost = parseFloat(document.getElementById('onpremCostSlider').value);
+            const adoptionRate = parseInt(document.getElementById('adoptionRateSlider').value);
+            const reservedRate = parseInt(document.getElementById('reservedRateSlider').value);
+            const optimizationRate = parseInt(document.getElementById('optimizationRateSlider').value);
+            const decommMonths = parseInt(document.getElementById('decommMonthsSlider').value);
+            const efficiencyFactor = parseFloat(document.getElementById('efficiencyFactorSlider').value);
+
+            // Update display values
+            document.getElementById('onpremCost').textContent = onpremCost.toFixed(1);
+            document.getElementById('adoptionRate').textContent = adoptionRate;
+            document.getElementById('reservedRate').textContent = reservedRate;
+            document.getElementById('optimizationRate').textContent = optimizationRate;
+            document.getElementById('decommMonths').textContent = decommMonths;
+            document.getElementById('efficiencyFactor').textContent = efficiencyFactor.toFixed(1);
+
+            // Calculate costs
+            const cloudBaseCost = onpremCost * (adoptionRate / 100) * 1.15; // cloud is ~15% more expensive initially
+            const cloudOptimized = cloudBaseCost * (1 - reservedRate / 100) * (1 - optimizationRate / 100);
+            const year1CloudCost = cloudOptimized * efficiencyFactor;
+            const onpremRemaining = onpremCost * (1 - adoptionRate / 100);
+            const year1Total = year1CloudCost + onpremRemaining;
+            
+            const migrationCost = onpremCost * 0.3; // 30% of annual cost
+            const year1WithMigration = year1Total + (migrationCost / 12);
+            
+            // Year 2 and 3 projections
+            const decommissionFactor = Math.max(0, 1 - (decommMonths - 12) / 12);
+            const year2CloudCost = cloudOptimized * (0.6 + decommissionFactor * 0.4) * efficiencyFactor;
+            const year2OnPrem = onpremCost * (1 - adoptionRate / 100) * Math.max(0, 1 - decommissionFactor);
+            const year2Total = year2CloudCost + year2OnPrem;
+            
+            const year3CloudCost = cloudOptimized * efficiencyFactor;
+            const year3Total = year3CloudCost;
+            
+            const threeyearTco = year1WithMigration + year2Total + year3Total;
+            const baselineOnprem = (onpremCost * 3) * 1.02; // 2% annual growth
+            const costAvoidance = baselineOnprem - threeyearTco;
+            const breakeven = year1WithMigration > onpremCost ? 1.0 + ((migrationCost - costAvoidance / 3) / (onpremCost - year1CloudCost)) : 2.3;
+            const roi = costAvoidance > 0 ? (costAvoidance / migrationCost).toFixed(1) : 0;
+
+            // Update KPIs
+            document.getElementById('year1CloudCost').textContent = year1CloudCost.toFixed(1);
+            document.getElementById('year1Total').textContent = year1WithMigration.toFixed(1);
+            document.getElementById('threeyearTco').textContent = threeyearTco.toFixed(1);
+            document.getElementById('costAvoidance').textContent = costAvoidance.toFixed(1);
+            document.getElementById('breakeven').textContent = Math.max(0.8, breakeven).toFixed(1);
+            document.getElementById('year3CloudCost').textContent = year3CloudCost.toFixed(1);
+            document.getElementById('migrationCost').textContent = (migrationCost / 3).toFixed(1);
+            document.getElementById('roi').textContent = roi;
+
+            // Cost breakdown
+            document.getElementById('breakdown_onprem').textContent = onpremRemaining.toFixed(2);
+            document.getElementById('breakdown_cloud').textContent = cloudBaseCost.toFixed(2);
+            document.getElementById('breakdown_reserved').textContent = (cloudBaseCost * reservedRate / 100).toFixed(2);
+            document.getElementById('breakdown_optimization').textContent = ((cloudBaseCost * (1 - reservedRate / 100)) * optimizationRate / 100).toFixed(2);
+            document.getElementById('breakdown_migration').textContent = (migrationCost / 12).toFixed(2);
+            document.getElementById('breakdown_total').textContent = year1WithMigration.toFixed(2);
+
+            // Update chart
+            updateCostChart(onpremCost, year1WithMigration, year2Total, year3Total, adoptionRate, decommMonths);
+        }
+
+        function updateCostChart(baseline, y1, y2, y3, adoption, decommMonths) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            const months = [];
+            const onpremCosts = [];
+            const cloudCosts = [];
+            const hybridCosts = [];
+
+            for (let i = 0; i <= 36; i++) {
+                months.push(`M${i}`);
+                
+                // On-prem costs
+                const onpremCost = baseline * (1 + (i / 12) * 0.02);
+                onpremCosts.push(parseFloat(onpremCost.toFixed(2)));
+                
+                // Cloud adoption curve
+                const adoptionFactor = Math.min(1, (adoption / 100) * (i / 12));
+                const cloudCost = baseline * adoptionFactor * 1.15 * (1 - (adoption / 200)) * 0.8;
+                cloudCosts.push(parseFloat(cloudCost.toFixed(2)));
+                
+                // Hybrid (actual path)
+                const remaining = baseline * (1 - adoptionFactor);
+                hybridCosts.push(parseFloat((remaining + cloudCost).toFixed(2)));
+            }
+
+            if (costChart) {
+                costChart.data.labels = months;
+                costChart.data.datasets[0].data = onpremCosts;
+                costChart.data.datasets[1].data = cloudCosts;
+                costChart.data.datasets[2].data = hybridCosts;
+                costChart.update();
+            } else {
+                costChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'On-Prem Only Baseline',
+                                data: onpremCosts,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                borderDash: [5, 5],
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Pure Cloud Path',
+                                data: cloudCosts,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Hybrid Path (Actual)',
+                                data: hybridCosts,
+                                borderColor: '#0A3161',
+                                backgroundColor: 'rgba(10, 49, 97, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '€' + value.toFixed(1) + 'M';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetSimulator() {
+            document.getElementById('onpremCostSlider').value = 2.8;
+            document.getElementById('adoptionRateSlider').value = 40;
+            document.getElementById('reservedRateSlider').value = 50;
+            document.getElementById('optimizationRateSlider').value = 20;
+            document.getElementById('decommMonthsSlider').value = 18;
+            document.getElementById('efficiencyFactorSlider').value = 1.1;
+            updateSimulator();
+        }
+
+        // Event listeners
+        document.getElementById('onpremCostSlider').addEventListener('input', updateSimulator);
+        document.getElementById('adoptionRateSlider').addEventListener('input', updateSimulator);
+        document.getElementById('reservedRateSlider').addEventListener('input', updateSimulator);
+        document.getElementById('optimizationRateSlider').addEventListener('input', updateSimulator);
+        document.getElementById('decommMonthsSlider').addEventListener('input', updateSimulator);
+        document.getElementById('efficiencyFactorSlider').addEventListener('input', updateSimulator);
+
+        window.addEventListener('load', initSimulator);
+    </script>
+</body>
+</html>
