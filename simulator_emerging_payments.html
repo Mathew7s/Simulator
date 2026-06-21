@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emerging Payments & Competition Simulator - UBS Card Center</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e3f2fd 100%);
+            color: #1a202c;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0A3161 0%, #003D82 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 24px rgba(10, 49, 97, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+        }
+        
+        .header a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .simulator-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .control-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+            height: fit-content;
+        }
+        
+        .control-panel h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .control-group {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e0e7ff;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .control-label label {
+            font-weight: 600;
+            color: #0A3161;
+            font-size: 13px;
+        }
+        
+        .control-value {
+            font-weight: 700;
+            color: #FF8C00;
+            font-size: 13px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e7ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0A3161;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(10, 49, 97, 0.3);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #0A3161;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(10, 49, 97, 0.3);
+        }
+        
+        .output-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+        }
+        
+        .output-panel h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .kpi-card {
+            background: #F0F4F8;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #FF8C00;
+        }
+        
+        .kpi-label {
+            font-size: 11px;
+            color: #4a5568;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+        
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0A3161;
+        }
+        
+        .kpi-unit {
+            font-size: 12px;
+            color: #4a5568;
+            margin-top: 0.25rem;
+        }
+        
+        .charts-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+            margin-bottom: 2rem;
+        }
+        
+        .charts-section h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 2rem;
+        }
+        
+        .revenue-breakdown {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+        }
+        
+        .revenue-breakdown h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .revenue-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            border-bottom: 1px solid #e0e7ff;
+            font-size: 13px;
+        }
+        
+        .revenue-line:last-child {
+            border-bottom: none;
+        }
+        
+        .revenue-label {
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .revenue-value {
+            font-weight: 700;
+            color: #10b981;
+        }
+        
+        .competitive-scenarios {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid #e0e7ff;
+            box-shadow: 0 4px 12px rgba(10, 49, 97, 0.08);
+        }
+        
+        .competitive-scenarios h2 {
+            font-size: 18px;
+            color: #0A3161;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #0A3161;
+            padding-bottom: 0.5rem;
+        }
+        
+        .scenario {
+            background: #F0F4F8;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #FF8C00;
+        }
+        
+        .scenario-title {
+            font-weight: 700;
+            color: #0A3161;
+            margin-bottom: 0.25rem;
+        }
+        
+        .scenario-description {
+            font-size: 12px;
+            color: #4a5568;
+        }
+        
+        .scenario-metric {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-top: 0.5rem;
+        }
+        
+        .scenario-label {
+            color: #4a5568;
+        }
+        
+        .scenario-value {
+            font-weight: 700;
+            color: #10b981;
+        }
+        
+        .footer-note {
+            background: #FFFACD;
+            border-left: 4px solid #FF8C00;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #664D03;
+            margin-top: 2rem;
+        }
+        
+        .footer-note strong {
+            color: #332701;
+        }
+        
+        .reset-button {
+            background: #0A3161;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        
+        .reset-button:hover {
+            background: #003D82;
+        }
+        
+        @media (max-width: 1024px) {
+            .simulator-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Emerging Payments & Competitive Positioning Simulator</h1>
+            <p>Strategic model for cloud-enabled innovation and market share growth</p>
+            <a href="index.html">← Back to Simulators</a>
+        </div>
+
+        <div class="simulator-wrapper">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <h2>⚙️ Innovation Parameters</h2>
+                
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Platform Velocity (Cloud vs Legacy)</label>
+                        <span class="control-value"><span id="platformVelocity">2.5</span>x</span>
+                    </div>
+                    <input type="range" id="platformVelocitySlider" min="1" max="5" value="2.5" step="0.1">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">cloud-native deployment speed vs. monolithic legacy</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>API Platform Maturity (%)</label>
+                        <span class="control-value"><span id="apiMaturity">50</span>%</span>
+                    </div>
+                    <input type="range" id="apiMaturitySlider" min="20" max="90" value="50" step="5">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">fintech partner integration capability</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Digital Wallet Adoption (% addressable market)</label>
+                        <span class="control-value"><span id="walletAdoption">22</span>%</span>
+                    </div>
+                    <input type="range" id="walletAdoptionSlider" min="5" max="50" value="22" step="2">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Apple Pay, Google Pay, contactless mobile</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>BNPL Penetration (% new customers)</label>
+                        <span class="control-value"><span id="bnplPenetration">15</span>%</span>
+                    </div>
+                    <input type="range" id="bnplPenetrationSlider" min="2" max="35" value="15" step="2">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">Buy-Now-Pay-Later new product revenue</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Fraud Detection Improvement (%)</label>
+                        <span class="control-value"><span id="fraudReduction">35</span>%</span>
+                    </div>
+                    <input type="range" id="fraudReductionSlider" min="10" max="60" value="35" step="5">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">AI/ML cost reduction + customer satisfaction</p>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <label>Market Capture Rate (%)</label>
+                        <span class="control-value"><span id="marketCapture">12</span>%</span>
+                    </div>
+                    <input type="range" id="marketCaptureSlider" min="3" max="25" value="12" step="1">
+                    <p style="font-size: 11px; color: #4a5568; margin-top: 0.5rem;">share of emerging payments market (vs fintech rivals)</p>
+                </div>
+
+                <button class="reset-button" onclick="resetSimulator()">Reset to Defaults</button>
+            </div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <h2>📊 Revenue & Competitive Metrics</h2>
+                
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Year 1 New Revenue</div>
+                        <div class="kpi-value">€<span id="year1NewRevenue">8.5</span>M</div>
+                        <div class="kpi-unit">emerging payment modalities</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">3-Year Cumulative Revenue</div>
+                        <div class="kpi-value">€<span id="threeyearRevenue">35.2</span>M</div>
+                        <div class="kpi-unit">new streams (wallets, BNPL, crypto)</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Time-to-Market Advantage</div>
+                        <div class="kpi-value"><span id="timeAdvantage">4.2</span> mo</div>
+                        <div class="kpi-unit">vs. legacy platform competitors</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Feature Deployment Rate (Year 1)</div>
+                        <div class="kpi-value"><span id="deploymentRate">18</span> /yr</div>
+                        <div class="kpi-unit">new payment products (cloud-native)</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Fraud Loss Prevention</div>
+                        <div class="kpi-value">€<span id="fraudSavings">2.1</span>M</div>
+                        <div class="kpi-unit">3-year cumulative</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Market Share Growth</div>
+                        <div class="kpi-value"><span id="marketShareGrowth">3.8</span>%</div>
+                        <div class="kpi-unit">absolute points (3-year)</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Fintech Partner Integrations</div>
+                        <div class="kpi-value"><span id="fintechPartners">12</span></div>
+                        <div class="kpi-unit">active partnerships by Year 3</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-label">Competitive Advantage Index</div>
+                        <div class="kpi-value"><span id="competitiveIndex">7.2</span>/10</div>
+                        <div class="kpi-unit">vs. legacy fintech rivals</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <h2>📈 3-Year Revenue Trajectory: Emerging Payment Modalities</h2>
+            
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Revenue Breakdown -->
+        <div class="revenue-breakdown">
+            <h2>💰 Year 1 Revenue Breakdown by Payment Modality</h2>
+            
+            <div class="revenue-line">
+                <span class="revenue-label">Digital Wallets (Apple Pay, Google Pay)</span>
+                <span class="revenue-value">€<span id="revenue_wallets">3.2</span>M</span>
+            </div>
+            
+            <div class="revenue-line">
+                <span class="revenue-label">BNPL (Buy-Now-Pay-Later)</span>
+                <span class="revenue-value">€<span id="revenue_bnpl">2.8</span>M</span>
+            </div>
+            
+            <div class="revenue-line">
+                <span class="revenue-label">Crypto/Stablecoin Cards</span>
+                <span class="revenue-value">€<span id="revenue_crypto">1.2</span>M</span>
+            </div>
+            
+            <div class="revenue-line">
+                <span class="revenue-label">Instant Payments (TIPS/SEPA)</span>
+                <span class="revenue-value">€<span id="revenue_instant">0.9</span>M</span>
+            </div>
+            
+            <div class="revenue-line">
+                <span class="revenue-label">Fraud Loss Prevention (cost savings)</span>
+                <span class="revenue-value">€<span id="revenue_fraud">0.4</span>M</span>
+            </div>
+            
+            <div class="revenue-line" style="background: #E0EEFF; padding: 1rem; margin-top: 0.5rem; border-radius: 6px;">
+                <span class="revenue-label" style="font-weight: 700; color: #0A3161;">Year 1 Total New Revenue Impact</span>
+                <span class="revenue-value" style="color: #10b981; font-size: 18px;">€<span id="revenue_total">8.5</span>M</span>
+            </div>
+        </div>
+
+        <!-- Competitive Scenarios -->
+        <div class="competitive-scenarios">
+            <h2>🎯 Competitive Scenarios: Cloud-Native vs. Legacy</h2>
+            
+            <div class="scenario">
+                <div class="scenario-title">Scenario A: Conservative (Base Case)</div>
+                <div class="scenario-description">Cloud platform platform at 50% API maturity, moderate market capture</div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">3-Year Revenue Uplift:</span>
+                    <span class="scenario-value">€35.2M</span>
+                </div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">Time-to-Market Advantage:</span>
+                    <span class="scenario-value">4.2 months</span>
+                </div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">Market Share Growth:</span>
+                    <span class="scenario-value">3.8%</span>
+                </div>
+            </div>
+            
+            <div class="scenario">
+                <div class="scenario-title">Scenario B: Aggressive Innovation</div>
+                <div class="scenario-description">Full API platform maturity (90%), rapid fintech partnerships</div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">3-Year Revenue Uplift:</span>
+                    <span class="scenario-value">€68.4M</span>
+                </div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">Time-to-Market Advantage:</span>
+                    <span class="scenario-value">2.1 months</span>
+                </div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">Market Share Growth:</span>
+                    <span class="scenario-value">7.2%</span>
+                </div>
+            </div>
+            
+            <div class="scenario">
+                <div class="scenario-title">Scenario C: Legacy Platform (No Cloud Modernization)</div>
+                <div class="scenario-description">Monolithic card processing continues, competitors gain market share</div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">3-Year Revenue Uplift:</span>
+                    <span class="scenario-value">€8.2M</span>
+                </div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">Time-to-Market Advantage:</span>
+                    <span class="scenario-value">-6.0 months (disadvantage)</span>
+                </div>
+                <div class="scenario-metric">
+                    <span class="scenario-label">Market Share Growth:</span>
+                    <span class="scenario-value">-2.1% (loss to fintech)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <strong>📋 Methodology Note:</strong> This simulator models competitive advantage from cloud-enabled innovation velocity. Platform velocity multiplier reflects faster deployment cycles with microservices vs. monolithic architecture. Revenue projections for emerging payment modalities are based on fintech market research (Euromonitor, McKinsey payments trends); actual uptake depends on product strategy and brand positioning. Fraud reduction savings reflect industry benchmarks for AI/ML anomaly detection scaling in cloud environments. Market share scenarios represent three strategic postures (conservative, aggressive, legacy).
+        </div>
+    </div>
+
+    <script>
+        let revenueChart = null;
+
+        function initSimulator() {
+            updateSimulator();
+        }
+
+        function updateSimulator() {
+            const platformVelocity = parseFloat(document.getElementById('platformVelocitySlider').value);
+            const apiMaturity = parseInt(document.getElementById('apiMaturitySlider').value);
+            const walletAdoption = parseInt(document.getElementById('walletAdoptionSlider').value);
+            const bnplPenetration = parseInt(document.getElementById('bnplPenetrationSlider').value);
+            const fraudReduction = parseInt(document.getElementById('fraudReductionSlider').value);
+            const marketCapture = parseInt(document.getElementById('marketCaptureSlider').value);
+
+            // Update display values
+            document.getElementById('platformVelocity').textContent = platformVelocity.toFixed(1);
+            document.getElementById('apiMaturity').textContent = apiMaturity;
+            document.getElementById('walletAdoption').textContent = walletAdoption;
+            document.getElementById('bnplPenetration').textContent = bnplPenetration;
+            document.getElementById('fraudReduction').textContent = fraudReduction;
+            document.getElementById('marketCapture').textContent = marketCapture;
+
+            // Calculate revenues
+            const baseWalletRevenue = (walletAdoption / 20) * 15; // base of €15M addressable
+            const baseBnplRevenue = (bnplPenetration / 20) * 18.5;
+            const baseCryptoRevenue = 5 * (apiMaturity / 100);
+            const baseInstantRevenue = 1.2 * (apiMaturity / 100);
+            const fraudSavings = (fraudReduction / 100) * 6;
+            
+            const year1Total = baseWalletRevenue + baseBnplRevenue + baseCryptoRevenue + baseInstantRevenue + (fraudSavings / 3);
+            const year2Total = year1Total * 1.35 * (platformVelocity / 2.5);
+            const year3Total = year2Total * 1.28 * (platformVelocity / 2.5);
+            const threeyearTotal = year1Total + year2Total + year3Total;
+            
+            const timeAdvantage = Math.max(1, 5 - (platformVelocity - 1) * 1.2);
+            const deploymentRate = Math.round(7 * platformVelocity);
+            const marketShareGrowth = (marketCapture / 100) * 32; // 32% market share growth pool
+            const fintechPartners = Math.round(6 + (apiMaturity / 100) * 14);
+            const competitiveIndex = (platformVelocity / 5) * 6 + (apiMaturity / 100) * 4;
+
+            // Update KPIs
+            document.getElementById('year1NewRevenue').textContent = year1Total.toFixed(1);
+            document.getElementById('threeyearRevenue').textContent = threeyearTotal.toFixed(1);
+            document.getElementById('timeAdvantage').textContent = timeAdvantage.toFixed(1);
+            document.getElementById('deploymentRate').textContent = deploymentRate;
+            document.getElementById('fraudSavings').textContent = fraudSavings.toFixed(1);
+            document.getElementById('marketShareGrowth').textContent = marketShareGrowth.toFixed(1);
+            document.getElementById('fintechPartners').textContent = fintechPartners;
+            document.getElementById('competitiveIndex').textContent = competitiveIndex.toFixed(1);
+
+            // Revenue breakdown
+            document.getElementById('revenue_wallets').textContent = baseWalletRevenue.toFixed(1);
+            document.getElementById('revenue_bnpl').textContent = baseBnplRevenue.toFixed(1);
+            document.getElementById('revenue_crypto').textContent = baseCryptoRevenue.toFixed(1);
+            document.getElementById('revenue_instant').textContent = baseInstantRevenue.toFixed(1);
+            document.getElementById('revenue_fraud').textContent = (fraudSavings / 3).toFixed(1);
+            document.getElementById('revenue_total').textContent = year1Total.toFixed(1);
+
+            // Update chart
+            updateRevenueChart(year1Total, year2Total, year3Total, platformVelocity, apiMaturity);
+        }
+
+        function updateRevenueChart(y1, y2, y3, velocity, api) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            const months = [];
+            const legacyPath = [];
+            const cloudPath = [];
+            const aggressivePath = [];
+
+            for (let i = 0; i <= 36; i++) {
+                months.push(`M${i}`);
+                
+                // Legacy monolithic (slow growth)
+                const legacy = (y1 / 3) * (i / 12) * 0.6;
+                legacyPath.push(Math.max(0, parseFloat(legacy.toFixed(2))));
+                
+                // Cloud base case (moderate velocity)
+                const cloud = (y1 * (i / 12)) * (velocity / 2.5) * Math.pow(1.1, i / 12);
+                cloudPath.push(parseFloat(cloud.toFixed(2)));
+                
+                // Aggressive innovation (high velocity + partnerships)
+                const aggressive = (y1 * (i / 12)) * (velocity / 2.5) * (api / 50) * Math.pow(1.15, i / 12);
+                aggressivePath.push(parseFloat(aggressive.toFixed(2)));
+            }
+
+            if (revenueChart) {
+                revenueChart.data.labels = months;
+                revenueChart.data.datasets[0].data = legacyPath;
+                revenueChart.data.datasets[1].data = cloudPath;
+                revenueChart.data.datasets[2].data = aggressivePath;
+                revenueChart.update();
+            } else {
+                revenueChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'Legacy Platform Path',
+                                data: legacyPath,
+                                borderColor: '#ef4444',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                borderDash: [5, 5],
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Cloud Base Case',
+                                data: cloudPath,
+                                borderColor: '#0A3161',
+                                backgroundColor: 'rgba(10, 49, 97, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Cloud Aggressive Innovation',
+                                data: aggressivePath,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '€' + value.toFixed(1) + 'M';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function resetSimulator() {
+            document.getElementById('platformVelocitySlider').value = 2.5;
+            document.getElementById('apiMaturitySlider').value = 50;
+            document.getElementById('walletAdoptionSlider').value = 22;
+            document.getElementById('bnplPenetrationSlider').value = 15;
+            document.getElementById('fraudReductionSlider').value = 35;
+            document.getElementById('marketCaptureSlider').value = 12;
+            updateSimulator();
+        }
+
+        // Event listeners
+        document.getElementById('platformVelocitySlider').addEventListener('input', updateSimulator);
+        document.getElementById('apiMaturitySlider').addEventListener('input', updateSimulator);
+        document.getElementById('walletAdoptionSlider').addEventListener('input', updateSimulator);
+        document.getElementById('bnplPenetrationSlider').addEventListener('input', updateSimulator);
+        document.getElementById('fraudReductionSlider').addEventListener('input', updateSimulator);
+        document.getElementById('marketCaptureSlider').addEventListener('input', updateSimulator);
+
+        window.addEventListener('load', initSimulator);
+    </script>
+</body>
+</html>
